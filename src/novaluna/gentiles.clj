@@ -3,13 +3,16 @@
             ;; [clojure.edn :as edn]
             [instaparse.core :as insta]))
 
+(defn third [lst] (nth lst 2))
+(defn fourth [lst] (nth lst 3))
+
 (def parse-tile-data
   "Parse the tile list"
   (insta/parser
    "Set     := line+
     <line>  := tile | <newline>
     tile    := points <space> colour goals?
-    <goals> := (<space> | goal)*
+    goals := (<space> | goal)*
     points  := #'\\d'
     colour  := '1' | '2' | '3' | '4'
     goal    := <'['> (colour|<space>)+ <']'>
@@ -30,34 +33,52 @@
     "1" :cyan
     "2" :yellow
     "3" :red
-    "4" :blue
-    :error))
+    "4" :cornflowerblue
+    :white))
 
 (defn create-number
   [x]
-  [:text x {:stroke :black :font-size 30}])
+  [:g
+   [:circle {:fill :white} [0 0] 25]
+   [:text {:stroke :black, :font-size "30pt", :fill :grey :x -10 :y 13} x]])
 
 (defn create-goal
-  "Create a goal"
+  "Create a goal with 1-4 colours"
   [& xs]
-  (let [v [:dali/align {:axis :center}]]
-    (into v (map #(vector :circle [0 0] 10 {:stroke :black, :stroke-width 1, :fill %}) xs))))
+  (let [c0 [:circle {:fill :white} [0 0] 25]
+        v [:g c0]]
+    (case (count xs)
+      1 (conj v [:circle {:fill xs} [0 0] 7.5 ])
+      2 (into v [[:circle {:fill (first xs)}  [-7.5 -7.5] 7.5]
+                 [:circle {:fill (second xs)} [ 7.5  7.5] 7.5]])
+      3 (into v [[:circle {:fill (first xs)}  [  0 -10] 7.5]
+                 [:circle {:fill (second xs)} [-10 7.5] 7.5]
+                 [:circle {:fill (third xs)}  [ 10 7.5] 7.5]])
+      4 (into v [[:circle {:fill (first xs)}  [-10 -10] 7.5]
+                 [:circle {:fill (second xs)} [-10  10] 7.5]
+                 [:circle {:fill (third xs)}  [ 10 -10] 7.5]
+                 [:circle {:fill (fourth xs)} [ 10  10] 7.5]])
+      v)))
+
+(defn create-goals
+  [& goals]
+  (into [:g] (mapv (fn [xy g] (vector :g {:transform [:translate xy]} g))
+                   (list [87 33] [33 87] [87 87])
+                   goals)))
 
 (defn create-tile
   "Create a coloured tile containing a number of points, and 0-3 goals"
   [& xs]
   (let [[points colour goals] xs
-        base [:rectangle [0 0] [50 50] {:stroke colour}]
-        t [:dali/stack]]
-    (-> t
-        (conj base)
-        (conj points)
-        (conj goals))))
+        base [:rect {:stroke :black, :stroke-width "1px" :fill colour} [0 0] [120 120] 20]
+        points' [:g {:transform [:translate [33 33]]} points]]
+    [:g base points' goals]))
 
 (defn create-set
   "Top-level structure"
-  [& xs]
-  (into [:dali/page] xs))
+  [& tiles]
+  (into [:dali/page]
+        tiles))
 
 (defn generate-svg
   "Walk the tree and convert to SVG"
@@ -65,6 +86,7 @@
   (insta/transform
    {:Set create-set
     :tile create-tile
+    :goals create-goals
     :goal create-goal
     :colour translate-colour
     :points create-number}
@@ -76,12 +98,6 @@
   (->> "data/tiles.txt"
        read-tiles
        generate-svg))
-
-(def document
-  [:dali/page
-   [:circle
-    {:stroke :indigo :stroke-width 4 :fill :darkorange}
-    [30 30] 20]])
 
 (defn -main
   [_]
