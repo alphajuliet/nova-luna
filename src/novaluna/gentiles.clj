@@ -83,8 +83,9 @@
 
 (defn render-set!
   [& tiles]
-  (for [t (create-tile )]
-    (io/render-png t (str "data/" t ".png"))))
+  (doseq [t tiles]
+    (io/render-png [:dali/page t] (str "data/" (java.util.UUID/randomUUID) ".png")))
+  nil)
 
 (defn generate-svg
   "Walk the tree and convert to SVG"
@@ -121,6 +122,7 @@
   []
   (-> "data/tiles.txt"
       read-tiles
+      generate-pngs
       render-set!))
 
 (defn -main
