@@ -1,6 +1,6 @@
 (ns novaluna.gentiles
   (:require [dali.io :as io]
-            ;; [clojure.edn :as edn]
+            [dali.layout.stack]
             [instaparse.core :as insta]))
 
 (defn third [lst] (nth lst 2))
@@ -31,7 +31,7 @@
   [x]
   (case x
     "1" :cyan
-    "2" :yellow
+    "2" :gold
     "3" :red
     "4" :cornflowerblue
     :white))
@@ -77,8 +77,9 @@
 (defn create-set
   "Top-level structure"
   [& tiles]
-  (into [:dali/page]
-        tiles))
+  (conj [:dali/page]
+        (into [:dali/stack {:direction :right :gap 10}]
+              tiles)))
 
 (defn generate-svg
   "Walk the tree and convert to SVG"
@@ -95,9 +96,10 @@
 (defn gen-tiles
   "Generate the set of tiles as SVG"
   []
-  (->> "data/tiles.txt"
-       read-tiles
-       generate-svg))
+  (-> "data/tiles.txt"
+      read-tiles
+      generate-svg
+      (io/render-svg "data/tiles.svg")))
 
 (defn -main
   [_]
