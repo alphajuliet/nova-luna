@@ -81,6 +81,11 @@
         (into [:dali/stack {:direction :right :gap 10}]
               tiles)))
 
+(defn render-set!
+  [& tiles]
+  (for [t (create-tile )]
+    (io/render-png t (str "data/" t ".png"))))
+
 (defn generate-svg
   "Walk the tree and convert to SVG"
   [tree]
@@ -93,13 +98,30 @@
     :points create-number}
    tree))
 
-(defn gen-tiles
+(defn generate-pngs
+  [tree]
+  (insta/transform
+   {:Set render-set!
+    :tile create-tile
+    :goals create-goals
+    :goal create-goal
+    :colour translate-colour
+    :points create-number}
+   tree))
+
+(defn gen-all-tiles
   "Generate the set of tiles as SVG"
   []
   (-> "data/tiles.txt"
       read-tiles
       generate-svg
       (io/render-svg "data/tiles.svg")))
+
+(defn render-all-tiles
+  []
+  (-> "data/tiles.txt"
+      read-tiles
+      render-set!))
 
 (defn -main
   [_]
