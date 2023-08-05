@@ -1,4 +1,4 @@
-(ns novaluna.gentiles
+(ns novaluna.gen-tiles
   (:require [dali.io :as io]
             [dali.layout.stack]
             [instaparse.core :as insta]))
