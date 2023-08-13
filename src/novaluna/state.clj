@@ -3,6 +3,8 @@
             [novaluna.gen-tiles :as tiles]
             [clojure.edn :as edn]))
 
+;;---------------------------
+
 (defn third [coll] (nth coll 2))
 
 (defn map-kv
@@ -18,7 +20,13 @@
     (> (first v1) (first v2)) 1
     :else (if (< (second v1) (second v2)) -1 1)))
 
-(def tile-data "data/tiles.txt")
+(defn sample
+  [n coll]
+  (reduce (fn [acc _] (conj acc (rand-nth coll)))
+          []
+          (range n)))
+
+;;---------------------------
 
 (defn translate-colour
   "Turn numbers into colours"
@@ -49,12 +57,16 @@
     :colour translate-colour}
    tree))
 
+(def tile-data "data/tiles.txt")
+
 (defn read-tiles
   "Read in all 69 tiles"
   [f]
   (-> f
       tiles/read-tiles
       create-tiles))
+
+;;---------------------------
 
 (def init-board {})
 
@@ -79,11 +91,6 @@
   (let [tile (get board [x y])]
     (find-connected-color board x y (:colour tile))))
 
-(defn sample
-  [n coll]
-  (reduce (fn [acc _] (conj acc (rand-nth coll)))
-          []
-          (range n)))
 
 (defn init-test-state
   "Initial board state for testing"
@@ -98,7 +105,7 @@
 (defn viz-state
   "Show the colours at each position on a board"
   [board]
-  (let [color-symbols {:yellow "Y", :blue "B", :cyan "C" :red "R"}
+  (let [color-symbols {:yellow "🟨", :blue "🟦", :cyan "🟩" :red "🟥"}
         max-x (apply max (map #(first (first %)) board))
         max-y (apply max (map #(second (first %)) board))]
     (doseq [y (range (inc max-y))]
