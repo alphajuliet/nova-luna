@@ -89,15 +89,24 @@
   "Initial board state for testing"
   []
   (let [tiles (read-tiles tile-data)
-        subset (sample 9 tiles)  ; does not handle repetitions
-        coords (for [x (range 3)
-                     y (range 3)]
+        subset (sample 16 tiles)  ; does not handle repetitions
+        coords (for [x (range 4)
+                     y (range 4)]
                  [x y])]
     (zipmap coords subset)))
 
 (defn viz-state
+  "Show the colours at each position on a board"
   [board]
-  (let [board' (map-kv (fn [v] (select-keys v [:colour])) board)]
-    board'))
+  (let [color-symbols {:yellow "Y", :blue "B", :cyan "C" :red "R"}
+        max-x (apply max (map #(first (first %)) board))
+        max-y (apply max (map #(second (first %)) board))]
+    (doseq [y (range (inc max-y))]
+      (doseq [x (range (inc max-x))]
+        (let [tile (get board [x y])
+              colour (:colour tile)
+              symbol (get color-symbols colour " ")]
+          (print symbol " ")))
+      (println))))
 
 ;; The End
