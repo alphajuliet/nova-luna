@@ -2,10 +2,6 @@
   (:require [novaluna.tiles :as tile]))
 
 ;;---------------------------
-(defn map-kv
-  "Map f over the values of a map."
-  [f coll]
-  (reduce-kv (fn [m k v] (assoc m k (f v))) (empty coll) coll))
 
 (defn compare-2d
   [v1 v2]

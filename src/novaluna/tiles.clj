@@ -1,7 +1,8 @@
 (ns novaluna.tiles
   (:require [instaparse.core :as insta]
             [novaluna.gen-tiles :as gen]
-            [clojure.edn :as edn]))
+            [clojure.edn :as edn]
+            [clojure.pprint :as pp]))
 
 (defn third [coll] (nth coll 2))
 
@@ -42,5 +43,11 @@
   (-> f
       gen/read-tiles
       create-tiles))
+
+(defn write-tiles
+  "Pretty print the tiles to a file"
+  [f tiles]
+  (with-open [writer (java.io.FileWriter. f)]
+   (pp/pprint tiles writer)))
 
 ;; The End
