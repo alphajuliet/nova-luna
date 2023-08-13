@@ -16,11 +16,34 @@
                   (map #(find-connected-color board (first %) (second %) colour new-visited)
                        neighbours)))))))
 
-(defn count-connected-color
+#_(defn count-connected-color
   "Count adjacent tiles with the same colour"
   [board x y]
   (let [tile (get board [x y])]
     (find-connected-color board x y (:colour tile) #{})))
 
+(defn check-goal
+  "Check a goal for a given tile"
+  [board xy g]
+  (let [[x y] xy]
+    (->> g
+         :goal
+         (map (fn [[colour target]]
+                (>= (find-connected-color board x y colour #{}) target)))
+         (every? true?))))
+
+(defn check-tile-goals
+  "Check each of the goals for a tile"
+  [board xy]
+  (let [tile (get board xy)]
+    (if (nil? tile)
+      nil
+      ;; else
+      (map #(check-goal board xy %) (:goals tile)))))
+
+(defn check-tiles
+  "Check all goals across the board"
+  [board]
+  (map (fn [[xy tile]] (check-tile-goals board xy)) board))
 
 ;; The End
