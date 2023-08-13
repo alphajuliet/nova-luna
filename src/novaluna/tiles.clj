@@ -16,7 +16,7 @@
     (throw (ex-info "Invalid colour code" {:code x}))))
 
 (defn create-points [p] {:cost (edn/read-string p)})
-(defn create-goal [& g] {:goal (vec g) :won false})
+(defn create-goal [& g] {:goal (frequencies g) :won false})
 (defn create-goals [& g] {:goals (vec g)})
 (defn create-tile [& t] (-> {}
                             (into (first t))
