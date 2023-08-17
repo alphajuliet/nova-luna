@@ -1,5 +1,7 @@
 (ns novaluna.state
-  (:require [novaluna.tiles :as tile]))
+  (:require [novaluna.tiles :as tile]
+            [clojure.spec.alpha :as s]
+            [spec-dict :refer [dict]]))
 
 ;;---------------------------
 
@@ -21,7 +23,7 @@
 
 (def init-board {})
 
-(defn init-test-state
+(defn test-board
   "Initial board state for testing"
   []
   (let [tiles (tile/read-tiles tile/tile-data)
@@ -45,9 +47,41 @@
           (print symbol " ")))
       (println))))
 
+;;---------------------------
+;; The game state...
+;; - board: an array of boards that contain tiles
+;; - stack: the unplayed tiles
+;; - wheel: the moon wheel containing available tiles
+;; - track: the moon track of player positions
+;; - meeple: the current position (0-11)
+
+(s/def ::colour #{:red :yellow :cyan :blue})
+(s/def ::goal (s/map-of ::colour pos-int?))
+(s/def ::tile (dict {:cost pos-int?
+                     :colour ::colour}
+                     ^:opt {:goals (s/coll-of ::goal)}))
+(s/def ::coord (s/tuple int? int?))
+(s/def ::board (s/map-of ::coord ::tile))
+(s/def ::player (dict {:board ::board
+                       :track pos-int?}))
+(s/def ::nat-int-or-nil (s/or :nat nat-int? :nil nil?))
+(s/def ::state (dict {:player (s/coll-of ::player)
+                      :stack (s/coll-of ::tile :into ())
+                      :wheel (s/coll-of ::nat-int-or-nil)
+                      :meeple nat-int?}))
+
+(defn initial-state
+  "Set up the initial state before any tiles are dealt into the wheel"
+  [nplayers tiles]
+  {:post [(s/valid? ::state %)]}
+  {:player (repeat nplayers {:board init-board :track 0})
+   :stack (shuffle tiles) ; stack of tiles
+   :wheel (vec (repeat 12 nil))
+   :meeple 0})
+
 (defn go
   []
-  (let [s0 (init-test-state)]
+  (let [s0 (test-board)]
     (viz-state s0)))
 
 ;; The End
