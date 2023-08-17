@@ -46,4 +46,32 @@
   [board]
   (map (fn [[xy tile]] (check-tile-goals board xy)) board))
 
+;;---------------------------
+;; Wheel actions
+
+(defn deal-tile
+  "Deal one tile from the stack to an empty slot in the wheel"
+  [state posn]
+  (if (nil? (nth (:wheel state) posn))
+    (let [tile (first (:stack state))]
+      (-> state
+          (update :stack rest)
+          (update :wheel #(assoc % posn tile))))
+    state))
+
+(defn nil-elements
+  "Return the positions of nil elements in a collection"
+  [coll]
+  (for [i (range (count coll))
+        :when (nil? (nth coll i))]
+    i))
+
+(defn populate-wheel
+  "Fill empty positions in the wheel from the stack, except for the meeple"
+  [state]
+  (let [empty-slots (nil-elements (:wheel state))
+        meeple-posn (:meeple state)
+        state' (reduce deal-tile state empty-slots)]
+    (assoc-in state' [:wheel meeple-posn] nil)))
+
 ;; The End
