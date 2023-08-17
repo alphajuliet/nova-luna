@@ -9,7 +9,7 @@
 (def parse-tile-data
   "Parse the tile list"
   (insta/parser
-   "Set     := line+
+   "<Set>     := line+
     <line>  := tile | <newline>
     tile    := points <space> colour goals?
     goals := (<space> | goal)*
