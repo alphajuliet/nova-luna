@@ -16,12 +16,6 @@
                   (map #(find-connected-color board (first %) (second %) colour new-visited)
                        neighbours)))))))
 
-#_(defn count-connected-color
-  "Count adjacent tiles with the same colour"
-  [board x y]
-  (let [tile (get board [x y])]
-    (find-connected-color board x y (:colour tile) #{})))
-
 (defn check-goal
   "Check a goal for a given tile"
   [board xy g]
@@ -44,7 +38,7 @@
 (defn check-tiles
   "Check all goals across the board"
   [board]
-  (map (fn [[xy tile]] (check-tile-goals board xy)) board))
+  (map (fn [[xy _]] (check-tile-goals board xy)) board))
 
 ;;---------------------------
 ;; Wheel actions
@@ -73,5 +67,39 @@
         meeple-posn (:meeple state)
         state' (reduce deal-tile state empty-slots)]
     (assoc-in state' [:wheel meeple-posn] nil)))
+
+;;---------------------------
+;; Play tiles
+
+(defn has-neighbour?
+  "Test if a location is next to an existing tile"
+  [board [x y]]
+  (or (contains? board [(dec x) y])
+      (contains? board [(inc x) y])
+      (contains? board [x (inc y)])
+      (contains? board [x (dec y)])))
+
+(defn legal-play?
+  "Is it legal to play a tile at the given coordinate?
+   Must be both unoccupied and adjacent to an existing tile, or just the first tile."
+  [state player xy]
+  (let [board (get-in state [:player player :board])]
+    (if (empty? board)
+      true
+      ;; else
+      (and (not (contains? board xy))
+           (has-neighbour? board xy)))))
+
+(defn play-tile
+  "Play a tile from the wheel to the board, in a legal position."
+  [state player wheel-pos xy]
+  (let [tile (get-in state [:wheel wheel-pos])]
+    (if (legal-play? state player xy)
+      (-> state
+         (assoc-in [:wheel wheel-pos] nil)
+         (assoc-in [:player player :board xy] tile))
+      ;; else
+      state)))
+
 
 ;; The End
