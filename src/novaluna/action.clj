@@ -1,5 +1,6 @@
 (ns novaluna.action
-  (:require [novaluna.state :as state]))
+  (:require [novaluna.state :as state]
+            [clojure.set :as set]))
 
 (defn find-connected-color
   "Find connected tiles of the given colour"
@@ -79,16 +80,30 @@
       (contains? board [x (inc y)])
       (contains? board [x (dec y)])))
 
+(defn available-spaces
+  "Returns the set of available coordinates to play a tile, i.e. the perimeter"
+  [state player]
+  (let [board (get-in state [:player player :board])
+        coords (keys board)]
+    (as-> coords <>
+        (for [[x y] <>]
+           (vector [(dec x) y]
+                   [(inc x) y]
+                   [x (dec y)]
+                   [x (inc y)]))
+         (apply concat <>)
+         (set <>)
+         (set/difference <> (set coords)))))
+
 (defn legal-play?
   "Is it legal to play a tile at the given coordinate?
    Must be both unoccupied and adjacent to an existing tile, or just the first tile."
   [state player xy]
-  (let [board (get-in state [:player player :board])]
-    (if (empty? board)
+  (let [avail (available-spaces state player)]
+    (if (empty? avail)
       true
       ;; else
-      (and (not (contains? board xy))
-           (has-neighbour? board xy)))))
+      (contains? avail xy))))
 
 (defn play-tile
   "Play a tile from the wheel to the board, in a legal position."
