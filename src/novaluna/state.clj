@@ -16,7 +16,7 @@
 (defn sample
   "Take n samples without replacement"
   [n coll]
-   (let [samples (shuffle coll)]
+  (let [samples (shuffle coll)]
     (take n samples)))
 
 (defn neighbours
@@ -50,21 +50,19 @@
     (doseq [y (range (inc max-y))]
       (doseq [x (range (inc max-x))]
         (let [tile (get board [x y])
-              colour (:colour tile)
-              symbol (get colour-symbols colour "❌")]
+              symbol (get colour-symbols (:colour tile) "❌")]
           (print symbol " ")))
       (println))))
 
 (defn viz-wheel
+  "Show a simplified representation of what's in the wheel"
   [state]
   (let [colour-symbols {:yellow "🟨", :blue "🟦", :cyan "🟩" :red "🟥"}
         wheel (:wheel state)]
     (doseq [i (range 12)]
       (let [tile (nth wheel i)
-            colour (:colour tile)
-            cost (:cost tile)
-            symbol (get colour-symbols colour "❌")]
-        (print cost symbol " ")))
+            symbol (get colour-symbols (:colour tile) "❌")]
+        (print (:cost tile) symbol " ")))
     (println)))
 
 ;;---------------------------
@@ -79,7 +77,7 @@
 (s/def ::goal (s/map-of ::colour pos-int?))
 (s/def ::tile (dict {:cost pos-int?
                      :colour ::colour}
-                     ^:opt {:goals (s/coll-of ::goal)}))
+                    ^:opt {:goals (s/coll-of ::goal)}))
 (s/def ::coord (s/tuple int? int?))
 (s/def ::board (s/map-of ::coord ::tile))
 (s/def ::player (dict {:board ::board
