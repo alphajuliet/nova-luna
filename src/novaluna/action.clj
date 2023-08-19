@@ -1,5 +1,6 @@
 (ns novaluna.action
   (:require [novaluna.state :as state]
+            [clojure.spec.alpha :as s]
             [clojure.set :as set]))
 
 (defn find-connected-color
@@ -64,6 +65,7 @@
 (defn populate-wheel
   "Fill empty positions in the wheel from the stack, except for the meeple"
   [state]
+  {:pre [(s/valid? ::state/state state)]}
   (let [empty-slots (nil-elements (:wheel state))
         meeple-posn (:meeple state)
         state' (reduce deal-tile state empty-slots)]
@@ -71,6 +73,7 @@
 
 ;;---------------------------
 ;; Play tiles
+
 
 (defn has-neighbour?
   "Test if a location is next to an existing tile"
@@ -86,11 +89,8 @@
   (let [board (get-in state [:player player :board])
         coords (keys board)]
     (as-> coords <>
-        (for [[x y] <>]
-           (vector [(dec x) y]
-                   [(inc x) y]
-                   [x (dec y)]
-                   [x (inc y)]))
+        (for [xy <>]
+           (state/neighbours xy))
          (apply concat <>)
          (set <>)
          (set/difference <> (set coords)))))

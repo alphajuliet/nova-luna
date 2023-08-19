@@ -19,6 +19,14 @@
    (let [samples (shuffle coll)]
     (take n samples)))
 
+(defn neighbours
+  "Return the neighbours of a given coordinate"
+  [[x y]]
+  (vector [(dec x) y]
+          [(inc x) y]
+          [x (dec y)]
+          [x (inc y)]))
+
 ;;---------------------------
 
 (def init-board {})
@@ -47,6 +55,18 @@
           (print symbol " ")))
       (println))))
 
+(defn viz-wheel
+  [state]
+  (let [colour-symbols {:yellow "🟨", :blue "🟦", :cyan "🟩" :red "🟥"}
+        wheel (:wheel state)]
+    (doseq [i (range 12)]
+      (let [tile (nth wheel i)
+            colour (:colour tile)
+            cost (:cost tile)
+            symbol (get colour-symbols colour "❌")]
+        (print cost symbol " ")))
+    (println)))
+
 ;;---------------------------
 ;; The game state...
 ;; - board: an array of boards that contain tiles
@@ -63,7 +83,7 @@
 (s/def ::coord (s/tuple int? int?))
 (s/def ::board (s/map-of ::coord ::tile))
 (s/def ::player (dict {:board ::board
-                       :track pos-int?}))
+                       :track nat-int?}))
 (s/def ::nat-int-or-nil (s/or :nat nat-int? :nil nil?))
 (s/def ::state (dict {:player (s/coll-of ::player)
                       :stack (s/coll-of ::tile :into ())
@@ -74,7 +94,7 @@
   "Set up the initial state before any tiles are dealt into the wheel"
   [nplayers tiles]
   {:post [(s/valid? ::state %)]}
-  {:player (repeat nplayers {:board init-board :track 0})
+  {:player (vec (repeat nplayers {:board init-board :track 0}))
    :stack (shuffle tiles) ; stack of tiles
    :wheel (vec (repeat 12 nil))
    :meeple 0})
