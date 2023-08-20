@@ -41,16 +41,20 @@
                  [x y])]
     (zipmap coords subset)))
 
-(defn viz-state
-  "Show the colours at each position on a board"
+(defn viz-board
+  "Show the colours at each position on a board with potentially non-adjacent tiles and both negative and positive coordinates"
   [board]
   (let [colour-symbols {:yellow "🟨", :blue "🟦", :cyan "🟩" :red "🟥"}
+        min-x (apply min (map #(first (first %)) board))
         max-x (apply max (map #(first (first %)) board))
+        min-y (apply min (map #(second (first %)) board))
         max-y (apply max (map #(second (first %)) board))]
-    (doseq [y (range (inc max-y))]
-      (doseq [x (range (inc max-x))]
+    (doseq [y (range min-y (inc max-y))]
+      (doseq [x (range min-x (inc max-x))]
         (let [tile (get board [x y])
-              symbol (get colour-symbols (:colour tile) "❌")]
+              symbol (if tile
+                       (get colour-symbols (:colour tile) "❌")
+                       "⬛️️")]
           (print symbol " ")))
       (println))))
 
@@ -100,6 +104,6 @@
 (defn go
   []
   (let [s0 (test-board)]
-    (viz-state s0)))
+    (viz-board s0)))
 
 ;; The End
