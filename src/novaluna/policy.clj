@@ -21,3 +21,5 @@
   (reduce (fn [st _] (play-random-tile st player))
           state
           (range n)))
+
+;; The End

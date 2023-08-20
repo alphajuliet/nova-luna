@@ -94,12 +94,13 @@
 
 (defn initial-state
   "Set up the initial state before any tiles are dealt into the wheel"
-  [nplayers tiles]
+  [nplayers]
   {:post [(s/valid? ::state %)]}
-  {:player (vec (repeat nplayers {:board init-board :track 0}))
-   :stack (shuffle tiles) ; stack of tiles
-   :wheel (vec (repeat 12 nil))
-   :meeple 0})
+  (let [tiles (tile/read-tiles tile/tile-data)]
+    {:player (vec (repeat nplayers {:board init-board :track 0}))
+    :stack (shuffle tiles) ; stack of tiles
+    :wheel (vec (repeat 12 nil))
+    :meeple 0}))
 
 (defn go
   []
