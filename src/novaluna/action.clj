@@ -12,6 +12,7 @@
             (nil? current-tile)
             (not= (:colour current-tile) colour))
       0
+      ;; else
       (let [new-visited (conj visited current-pos)
             neighbours (filter #(contains? board %) [[(inc x) y] [(dec x) y] [x (inc y)] [x (dec y)]])]
         (inc (reduce +
@@ -23,7 +24,6 @@
   [board xy g]
   (let [[x y] xy]
     (->> g
-         :goal
          (map (fn [[colour target]]
                 (>= (find-connected-color board x y colour #{}) target)))
          (every? true?))))
@@ -71,9 +71,13 @@
         state' (reduce deal-tile state empty-slots)]
     (assoc-in state' [:wheel meeple-posn] nil)))
 
+(defn eligible-tiles
+  "Which are the eligible tiles to play from the wheel"
+  [{:keys [wheel]}]
+  )
+
 ;;---------------------------
 ;; Play tiles
-
 
 (defn has-neighbour?
   "Test if a location is next to an existing tile"
@@ -88,12 +92,15 @@
   [state player]
   (let [board (get-in state [:player player :board])
         coords (keys board)]
-    (as-> coords <>
-        (for [xy <>]
-           (state/neighbours xy))
-         (apply concat <>)
-         (set <>)
-         (set/difference <> (set coords)))))
+    (if (empty? coords)
+      #{[0 0]}
+      ;; else
+      (as-> coords <>
+       (for [xy <>]
+         (state/neighbours xy))
+       (apply concat <>)
+       (set <>)
+       (set/difference <> (set coords))))))
 
 (defn legal-play?
   "Is it legal to play a tile at the given coordinate?
