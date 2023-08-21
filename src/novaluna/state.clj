@@ -69,6 +69,11 @@
         (print (:cost tile) symbol " ")))
     (println)))
 
+(defn board
+  "Shortcut to return a player's board"
+  [state player]
+  (get-in state [:player player :board]))
+
 ;;---------------------------
 ;; The game state...
 ;; - board: an array of boards that contain tiles
