@@ -1,5 +1,5 @@
 (ns novaluna.action
-  (:require [novaluna.state :as state]
+  (:require [novaluna.state :as st]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]))
 
@@ -65,16 +65,19 @@
 (defn populate-wheel
   "Fill empty positions in the wheel from the stack, except for the meeple"
   [state]
-  {:pre [(s/valid? ::state/state state)]}
+  {:pre [(s/valid? ::st/state state)]}
   (let [empty-slots (nil-elements (:wheel state))
         meeple-posn (:meeple state)
         state' (reduce deal-tile state empty-slots)]
     (assoc-in state' [:wheel meeple-posn] nil)))
 
 (defn eligible-tiles
-  "Which are the eligible tiles to play from the wheel"
-  [{:keys [wheel]}]
-  )
+  "List the eligible tile positions to play from the wheel"
+  [{:keys [wheel meeple]}]
+  (let [next-posns (map #(mod (+ % meeple) 12) (range 12))]
+    (->> next-posns
+         (remove #(nil? (nth wheel %)))
+         (take 3))))
 
 ;;---------------------------
 ;; Play tiles
@@ -97,7 +100,7 @@
       ;; else
       (as-> coords <>
        (for [xy <>]
-         (state/neighbours xy))
+         (st/neighbours xy))
        (apply concat <>)
        (set <>)
        (set/difference <> (set coords))))))
@@ -119,7 +122,9 @@
     (if (legal-play? state player xy)
       (-> state
          (assoc-in [:wheel wheel-pos] nil)
-         (assoc-in [:player player :board xy] tile))
+         (assoc-in [:player player :board xy] tile)
+         (assoc :meeple wheel-pos)
+         (update-in [:player player :track] #(+ % (:cost tile))))
       ;; else
       state)))
 
