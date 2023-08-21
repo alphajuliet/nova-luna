@@ -1,6 +1,6 @@
 (ns novaluna.policy
   (:require [novaluna.game :as game]
-            [novaluna.state :as state]
+            [novaluna.state :as st]
             [novaluna.action :as act]))
 
 (defn random-wheel-tile
