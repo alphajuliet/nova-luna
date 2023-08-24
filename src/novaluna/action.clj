@@ -20,13 +20,13 @@
                        neighbours)))))))
 
 (defn check-goal
-  "Check a goal for a given tile"
-  [board xy g]
+  "Check the difference to a goal for the tile at xy. A goal is a key-value pair of colour and count."
+  [board xy goal]
   (let [[x y] xy]
-    (->> g
-         (map (fn [[colour target]]
-                (>= (find-connected-color board x y colour #{}) target)))
-         (every? true?))))
+    (->> goal
+         (map (fn [[colour number]]
+                (- number (find-connected-color board x y colour #{}))))
+         (apply +))))
 
 (defn check-tile-goals
   "Check each of the goals for a tile"
@@ -41,6 +41,15 @@
   "Check all goals across the board"
   [board]
   (map (fn [[xy _]] (check-tile-goals board xy)) board))
+
+(defn count-goals
+  "Count how many goals are satisfied"
+  [board]
+  (->> board
+      check-tiles
+      flatten
+      (filter zero?)
+      count))
 
 ;;---------------------------
 ;; Wheel actions
