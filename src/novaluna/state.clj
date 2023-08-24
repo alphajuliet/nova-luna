@@ -44,19 +44,22 @@
 (defn viz-board
   "Show the colours at each position on a board with potentially non-adjacent tiles and both negative and positive coordinates"
   [board]
-  (let [colour-symbols {:yellow "🟨", :blue "🟦", :cyan "🟩" :red "🟥"}
-        min-x (apply min (map #(first (first %)) board))
-        max-x (apply max (map #(first (first %)) board))
-        min-y (apply min (map #(second (first %)) board))
-        max-y (apply max (map #(second (first %)) board))]
-    (doseq [y (range min-y (inc max-y))]
-      (doseq [x (range min-x (inc max-x))]
-        (let [tile (get board [x y])
-              symbol (if tile
-                       (get colour-symbols (:colour tile) "❌")
-                       "⬛️️")]
-          (print symbol " ")))
-      (println))))
+  (if (empty? board)
+    nil
+    ;; else
+    (let [colour-symbols {:yellow "🟨", :blue "🟦", :cyan "🟩" :red "🟥"}
+         min-x (apply min (map #(first (first %)) board))
+         max-x (apply max (map #(first (first %)) board))
+         min-y (apply min (map #(second (first %)) board))
+         max-y (apply max (map #(second (first %)) board))]
+     (doseq [y (range min-y (inc max-y))]
+       (doseq [x (range min-x (inc max-x))]
+         (let [tile (get board [x y])
+               symbol (if tile
+                        (get colour-symbols (:colour tile) "❌")
+                        "⬛️️")]
+           (print symbol " ")))
+       (println)))))
 
 (defn viz-wheel
   "Show a simplified representation of what's in the wheel"
