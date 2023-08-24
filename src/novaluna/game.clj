@@ -8,13 +8,12 @@
   (tile/read-tiles tile/tile-data))
 
 (defn score
-  "Calculate the score for a player's board"
+  "Calculate the score for a player's board. The lower score the better."
   [state player]
   (->> (st/board state player)
        act/check-tiles
        flatten
-       (filter true?)
-       count))
+       (apply +)))
 
 (defn init-game
   [nplayers]
