@@ -3,12 +3,15 @@
             [novaluna.state :as st]
             [novaluna.action :as act]))
 
+(defn random-element
+  "Choose a random element from a collection"
+  [coll]
+  (first (shuffle coll)))
+
 (defn random-wheel-tile
-  "Pick a random tile from the wheel"
+  "Pick a random eligible tile from the wheel"
   [state]
-  (let [wheel (:wheel state)
-        tile (first (drop-while nil? (shuffle wheel)))]
-    (.indexOf wheel tile)))
+  (random-element (act/eligible-tiles state)))
 
 (defn play-random-tile
   [state player]
