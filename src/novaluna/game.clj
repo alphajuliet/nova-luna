@@ -12,11 +12,7 @@
   [state player]
   (let [b (st/board state player)
         g (act/count-goals b)
-        d (->> b
-               act/find-goal-differences
-               act/extract-numeric-values
-               flatten
-               (apply +))]
+        d (act/sum-of-goal-differences b)]
     (- d g)))
 
 (defn init-game

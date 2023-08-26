@@ -49,13 +49,20 @@
                v)))
        (apply concat)))
 
+(defn sum-of-goal-differences
+  [board]
+  (->> board
+       find-goal-differences
+       extract-numeric-values
+       flatten
+       (apply +)))
+
 (defn count-goals
   "Count how many goals are satisfied"
   [board]
   (->> board
       find-goal-differences
       extract-numeric-values
-      (apply concat)
       (map #(apply + %))
       (filter zero?)
       count))
