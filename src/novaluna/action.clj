@@ -3,30 +3,28 @@
             [clojure.spec.alpha :as s]
             [clojure.set :as set]))
 
-(defn adjacent-tiles
-  [[x y]]
-  [[(dec x) y] [(inc x) y] [x (dec y)] [x (inc y)]])
-
-(defn dfs-count [grid start-coord target-colour visited]
-  (let [adj-tiles (adjacent-tiles start-coord)]
+(defn dfs-count
+  "Do a DFS to find all connected tiles of the given colour surrounding the start coordinate"
+  [board start-xy colour visited]
+  (let [adj-tiles (st/neighbours start-xy)]
     (apply + (map (fn [adj-tile]
-                   (if (or (visited adj-tile) (nil? (get grid adj-tile)))
+                   (if (or (visited adj-tile) (nil? (get board adj-tile)))
                      0
-                     (let [tile-colour (:colour (get grid adj-tile))]
-                       (if (= tile-colour target-colour)
+                     (let [tile-colour (:colour (get board adj-tile))]
+                       (if (= tile-colour colour)
                          (let [visited (conj visited adj-tile)]
-                           (apply + 1 (map (fn [next-adj-tile] (dfs-count grid next-adj-tile target-colour visited))
-                                          (adjacent-tiles adj-tile))))
+                           (apply + 1 (map (fn [next-adj-tile] (dfs-count board next-adj-tile colour visited))
+                                          (st/neighbours adj-tile))))
                          0))))
                  adj-tiles))))
 
 (defn compare-goals-to-actual
-  [board coord]
-  (let [tile (get board coord)
+  [board xy]
+  (let [tile (get board xy)
         goals (:goals tile)]
     (map (fn [goal]
            (reduce (fn [acc [color count]]
-                     (assoc acc color (max 0 (- count (dfs-count board coord color #{})))))
+                     (assoc acc color (max 0 (- count (dfs-count board xy color #{})))))
                    {}
                    goal))
          goals)))
@@ -34,6 +32,7 @@
 (defn find-goal-differences
   "Find the goal differences across all tiles"
   [board]
+  {:pre [(s/valid? ::board board)]}
   (reduce (fn [acc [coord _]]
             (assoc acc coord (compare-goals-to-actual board coord)))
           {}
@@ -115,17 +114,10 @@
 ;;---------------------------
 ;; Play tiles
 
-(defn has-neighbour?
-  "Test if a location is next to an existing tile"
-  [board [x y]]
-  (or (contains? board [(dec x) y])
-      (contains? board [(inc x) y])
-      (contains? board [x (inc y)])
-      (contains? board [x (dec y)])))
-
 (defn available-spaces
   "Returns the set of available coordinates to play a tile, i.e. the perimeter"
   [state player]
+  {:pre [(s/valid? ::state state)]}
   (let [board (get-in state [:player player :board])
         coords (keys board)]
     (if (empty? coords)
@@ -151,6 +143,7 @@
 (defn play-tile
   "Play a tile from the wheel to the board, in a legal position."
   [state player wheel-pos xy]
+  {:pre [(s/valid? ::state state)]}
   (let [tile (get-in state [:wheel wheel-pos])]
     (if (legal-play? state player xy)
       (-> state
@@ -161,6 +154,5 @@
          refresh-wheel)
       ;; else
       state)))
-
 
 ;; The End

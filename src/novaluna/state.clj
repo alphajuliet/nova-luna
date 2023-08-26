@@ -31,35 +31,31 @@
 
 (def init-board {})
 
-(defn test-board
-  "Initial board state for testing"
-  []
-  (let [tiles (tile/read-tiles tile/tile-data)
-        subset (sample 16 tiles)  ; does not handle repetitions
-        coords (for [x (range 4)
-                     y (range 4)]
-                 [x y])]
-    (zipmap coords subset)))
+(defn board
+  "Shortcut to return a player's board"
+  [state player]
+  (get-in state [:player player :board]))
 
 (defn viz-board
   "Show the colours at each position on a board with potentially non-adjacent tiles and both negative and positive coordinates"
-  [board]
-  (if (empty? board)
-    nil
-    ;; else
-    (let [colour-symbols {:yellow "🟨", :blue "🟦", :cyan "🟩" :red "🟥"}
-         min-x (apply min (map #(first (first %)) board))
-         max-x (apply max (map #(first (first %)) board))
-         min-y (apply min (map #(second (first %)) board))
-         max-y (apply max (map #(second (first %)) board))]
-     (doseq [y (range min-y (inc max-y))]
-       (doseq [x (range min-x (inc max-x))]
-         (let [tile (get board [x y])
-               symbol (if tile
-                        (get colour-symbols (:colour tile) "❌")
-                        "⬛️️")]
-           (print symbol " ")))
-       (println)))))
+  [state player]
+  (let [board (board state player)]
+    (if (empty? board)
+     nil
+     ;; else
+     (let [colour-symbols {:yellow "🟨", :blue "🟦", :cyan "🟩" :red "🟥"}
+           min-x (apply min (map #(first (first %)) board))
+           max-x (apply max (map #(first (first %)) board))
+           min-y (apply min (map #(second (first %)) board))
+           max-y (apply max (map #(second (first %)) board))]
+       (doseq [y (range min-y (inc max-y))]
+         (doseq [x (range min-x (inc max-x))]
+           (let [tile (get board [x y])
+                 symbol (if tile
+                          (get colour-symbols (:colour tile) "❌")
+                          "⬛️️")]
+             (print symbol " ")))
+         (println))))))
 
 (defn viz-wheel
   "Show a simplified representation of what's in the wheel"
@@ -71,11 +67,6 @@
             symbol (get colour-symbols (:colour tile) "❌")]
         (print (:cost tile) symbol " ")))
     (println)))
-
-(defn board
-  "Shortcut to return a player's board"
-  [state player]
-  (get-in state [:player player :board]))
 
 ;;---------------------------
 ;; The game state...
@@ -109,10 +100,5 @@
     :stack (shuffle tiles) ; stack of tiles
     :wheel (vec (repeat 12 nil))
     :meeple 0}))
-
-(defn go
-  []
-  (let [s0 (test-board)]
-    (viz-board s0)))
 
 ;; The End
