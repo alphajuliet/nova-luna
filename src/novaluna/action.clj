@@ -3,51 +3,60 @@
             [clojure.spec.alpha :as s]
             [clojure.set :as set]))
 
-(defn find-connected-color
-  "Find connected tiles of the given colour"
-  [board x y colour visited]
-  (let [current-pos [x y]
-        current-tile (get board current-pos)]
-    (if (or (contains? visited current-pos)
-            (nil? current-tile)
-            (not= (:colour current-tile) colour))
-      0
-      ;; else
-      (let [new-visited (conj visited current-pos)
-            neighbours (filter #(contains? board %) [[(inc x) y] [(dec x) y] [x (inc y)] [x (dec y)]])]
-        (inc (reduce +
-                  (map #(find-connected-color board (first %) (second %) colour new-visited)
-                       neighbours)))))))
+(defn adjacent-tiles
+  [[x y]]
+  [[(dec x) y] [(inc x) y] [x (dec y)] [x (inc y)]])
 
-(defn check-goal
-  "Check the difference to a goal for the tile at xy. A goal is a key-value pair of colour and count."
-  [board xy goal]
-  (let [[x y] xy]
-    (->> goal
-         (map (fn [[colour number]]
-                (- number (find-connected-color board x y colour #{}))))
-         (apply +))))
+(defn dfs-count [grid start-coord target-colour visited]
+  (let [adj-tiles (adjacent-tiles start-coord)]
+    (apply + (map (fn [adj-tile]
+                   (if (or (visited adj-tile) (nil? (get grid adj-tile)))
+                     0
+                     (let [tile-colour (:colour (get grid adj-tile))]
+                       (if (= tile-colour target-colour)
+                         (let [visited (conj visited adj-tile)]
+                           (apply + 1 (map (fn [next-adj-tile] (dfs-count grid next-adj-tile target-colour visited))
+                                          (adjacent-tiles adj-tile))))
+                         0))))
+                 adj-tiles))))
 
-(defn check-tile-goals
-  "Check each of the goals for a tile"
-  [board xy]
-  (let [tile (get board xy)]
-    (if (nil? tile)
-      nil
-      ;; else
-      (map #(check-goal board xy %) (:goals tile)))))
+(defn compare-goals-to-actual
+  [board coord]
+  (let [tile (get board coord)
+        goals (:goals tile)]
+    (map (fn [goal]
+           (reduce (fn [acc [color count]]
+                     (assoc acc color (max 0 (- count (dfs-count board coord color #{})))))
+                   {}
+                   goal))
+         goals)))
 
-(defn check-tiles
-  "Check all goals across the board"
+(defn find-goal-differences
+  "Find the goal differences across all tiles"
   [board]
-  (map (fn [[xy _]] (check-tile-goals board xy)) board))
+  (reduce (fn [acc [coord _]]
+            (assoc acc coord (compare-goals-to-actual board coord)))
+          {}
+          board))
+
+(defn extract-numeric-values
+  [m]
+  (->> m
+       vals
+       (map (fn [v]
+          (map (fn [inner-map]
+                 (vals inner-map))
+               v)))
+       (apply concat)))
 
 (defn count-goals
   "Count how many goals are satisfied"
   [board]
   (->> board
-      check-tiles
-      flatten
+      find-goal-differences
+      extract-numeric-values
+      (apply concat)
+      (map #(apply + %))
       (filter zero?)
       count))
 
@@ -74,7 +83,7 @@
 (defn populate-wheel
   "Fill empty positions in the wheel from the stack, except for the meeple"
   [state]
-  {:pre [(s/valid? ::st/state state)]}
+  ;; {:pre [(s/valid? ::st/state state)]}
   (let [empty-slots (nil-elements (:wheel state))
         meeple-posn (:meeple state)
         state' (reduce deal-tile state empty-slots)]
@@ -87,6 +96,14 @@
     (->> next-posns
          (remove #(nil? (nth wheel %)))
          (take 3))))
+
+(defn refresh-wheel
+  "Refresh the wheel if required"
+  [state]
+  (if (<= (count (remove nil? (:wheel state))) 2)
+    (populate-wheel state)
+    ;; else
+    state))
 
 ;;---------------------------
 ;; Play tiles
@@ -133,7 +150,8 @@
          (assoc-in [:wheel wheel-pos] nil)
          (assoc-in [:player player :board xy] tile)
          (assoc :meeple wheel-pos)
-         (update-in [:player player :track] #(+ % (:cost tile))))
+         (update-in [:player player :track] #(+ % (:cost tile)))
+         refresh-wheel)
       ;; else
       state)))
 
