@@ -13,7 +13,7 @@
                      (let [tile-colour (:colour (get board adj-tile))]
                        (if (= tile-colour colour)
                          (let [visited (conj visited adj-tile)]
-                           (apply + 1 (map (fn [next-adj-tile] (dfs-count board next-adj-tile colour visited))
+                           (reduce + 1 (map (fn [next-adj-tile] (dfs-count board next-adj-tile colour visited))
                                           (st/neighbours adj-tile))))
                          0))))
                  adj-tiles))))
@@ -24,7 +24,7 @@
         goals (:goals tile)]
     (map (fn [goal]
            (reduce (fn [acc [color count]]
-                     (assoc acc color (max 0 (- count (dfs-count board xy color #{})))))
+                     (merge acc {color (max 0 (- count (dfs-count board xy color #{})))}))
                    {}
                    goal))
          goals)))
@@ -32,7 +32,7 @@
 (defn find-goal-differences
   "Find the goal differences across all tiles"
   [board]
-  {:pre [(s/valid? ::board board)]}
+  ;; {:pre [(s/valid? ::st/board board)]}
   (reduce (fn [acc [coord _]]
             (assoc acc coord (compare-goals-to-actual board coord)))
           {}
@@ -82,9 +82,10 @@
 (defn nil-elements
   "Return the positions of nil elements in a collection"
   [coll]
-  (for [i (range (count coll))
-        :when (nil? (nth coll i))]
-    i))
+  (keep-indexed (fn [i elem]
+                  (when (nil? elem)
+                    i))
+                coll))
 
 (defn populate-wheel
   "Fill empty positions in the wheel from the stack, except for the meeple"
@@ -117,18 +118,13 @@
 (defn available-spaces
   "Returns the set of available coordinates to play a tile, i.e. the perimeter"
   [state player]
-  {:pre [(s/valid? ::state state)]}
   (let [board (get-in state [:player player :board])
         coords (keys board)]
     (if (empty? coords)
       #{[0 0]}
-      ;; else
-      (as-> coords <>
-       (for [xy <>]
-         (st/neighbours xy))
-       (apply concat <>)
-       (set <>)
-       (set/difference <> (set coords))))))
+      (let [neighbour-sets (map (comp set st/neighbours) coords)
+            all-neighbours (apply set/union neighbour-sets)]
+        (set/difference all-neighbours (set coords))))))
 
 (defn legal-play?
   "Is it legal to play a tile at the given coordinate?
@@ -143,7 +139,7 @@
 (defn play-tile
   "Play a tile from the wheel to the board, in a legal position."
   [state player wheel-pos xy]
-  {:pre [(s/valid? ::state state)]}
+  ;; {:pre [(s/valid? ::st/state state)]}
   (let [tile (get-in state [:wheel wheel-pos])]
     (if (legal-play? state player xy)
       (-> state
