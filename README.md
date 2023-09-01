@@ -9,4 +9,5 @@ Source files:
 - `state.clj`: manage the state of the game, including tile stack, boards, wheel, and scoring track
 - `action.clj`: provide actions to update the game state, mainly playing a tile and updating the wheel.
 - `game.clj`: game-level functions
+- `policy.clj`: policies for how to play the game
 
